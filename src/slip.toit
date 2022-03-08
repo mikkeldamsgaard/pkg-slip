@@ -40,7 +40,7 @@ class Slip:
     buf.put_byte SLIP_DELIMETER_
 
     bytes := buf.bytes
-    logger_.info "Sending packet of size $message.size, encoded size $bytes.size"
+    //logger_.info "Sending packet of size $message.size, encoded size $bytes.size"
     port_.write bytes
 
   /**
@@ -51,11 +51,11 @@ class Slip:
     while true:
         if parsed_.size != 0: 
           msg/ByteArray := parsed_.remove_last
-          logger_.info "Received packet of $msg.size"
+          //logger_.info "Received packet of $msg.size"
           return msg
         
         bytes := port_.read
-        logger_.debug "SLIP: read some bytes: $bytes.size"
+        //logger_.debug "SLIP: read some bytes: $bytes.size"
         add_to_parsed_ bytes
 
   add_to_parsed_ bytes/ByteArray:
@@ -66,9 +66,9 @@ class Slip:
         if it == 0xDC: decoded.put_byte SLIP_DELIMETER_
         else if it == 0xDD: decoded.put_byte SLIP_ESCAPE_
         else: throw "Byte encoding error, expected 0xC0 or 0xDB, but received: 0x$(%x it)"
-        want_escape_ = false;
+        want_escape_ = false
       else:
-        if it == SLIP_ESCAPE_: want_escape_ = true;
+        if it == SLIP_ESCAPE_: want_escape_ = true
         else: decoded.put_byte it
 
     remaining_ = remaining_ + decoded.bytes
@@ -78,14 +78,19 @@ class Slip:
     end := -1
     while true:
       while remaining_.size > idx and remaining_[idx] != SLIP_DELIMETER_: idx++
-      if idx >= remaining_.size: break;
+      if idx >= remaining_.size: break
       start := idx++
 
       while remaining_.size > idx and remaining_[idx] != SLIP_DELIMETER_: idx++
-      if idx >= remaining_.size: break;
-      end = idx++;
+      if idx >= remaining_.size: break
+      end = idx++
 
-      //log "Add parsed. $start - $end, first=0x$(%x remaining_[0]), size=$remaining_.size"
+      if start + 1 == end:
+        // Out of sequence detection. "Empty" SLIP messages indicate that we started reading in the middle of a message, so adjust
+        logger_.info "Out of sequence detected, auto correcting"
+        idx--
+        continue
+
       parsed.add remaining_[start+1..end]
 
     parsed.do --reversed=true:
