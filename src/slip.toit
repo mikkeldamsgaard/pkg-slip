@@ -3,11 +3,12 @@ import uart
 import bytes show Buffer
 import log show  default Logger
 import encoding.hex
-
+import writer show Writer
 SLIP_DELIMETER_      ::= 0xC0
 SLIP_ESCAPE_         ::= 0xDB
 SLIP_C0_REPLACEMENT_ ::= #[SLIP_ESCAPE_, 0xDC]
 SLIP_DB_REPLACEMENT_ ::= #[SLIP_ESCAPE_, 0xDD] 
+SLIP_DELIMETER_BUF_  ::= #[SLIP_DELIMETER_]
 
 /**
 Implements the slip protocol
@@ -16,6 +17,7 @@ class Slip:
   logger_/Logger ::= default.with_name "slip"
 
   port_/uart.Port
+  writer_/Writer
   parsed_/List := []
   remaining_/ByteArray := #[]
   want_escape_/bool := false
@@ -25,23 +27,46 @@ class Slip:
   data. The port will operate at speed $baud_rate.
   */
   constructor --rx_pin/Pin  --tx_pin/Pin --baud_rate/int:
-    port_ = uart.Port --rx=rx_pin --tx=tx_pin --baud_rate=baud_rate 
-    
+    logger_.info "Created slip protocol, with baud_rate: $baud_rate"
+    port_ = uart.Port --rx=rx_pin --tx=tx_pin --baud_rate=baud_rate
+    writer_ = Writer port_
+
   /**
   Encapsulates and transmits the $message.
   */
   send message/ByteArray:
-    buf := Buffer.with_initial_size (message.size*1.1+2).to_int
-    buf.put_byte SLIP_DELIMETER_
-    message.do:
-      if it == 0xC0: buf.write SLIP_C0_REPLACEMENT_
-      else if it == 0xDB: buf.write SLIP_DB_REPLACEMENT_
-      else: buf.put_byte it
+    encapsulated := encapsulate message
+    writer_.write encapsulated
+
+    logger_.info "Send packet of size $message.size encapsulated size: $encapsulated.size"
+
+  send_encapsulated encapsulated/ByteArray:
+    writer_.write encapsulated
+
+  encapsulate message/ByteArray -> ByteArray:
+    buf := Buffer.with_initial_size message.size*1.2.to_int
     buf.put_byte SLIP_DELIMETER_
 
-    bytes := buf.bytes
-    //logger_.info "Sending packet of size $message.size, encoded size $bytes.size"
-    port_.write bytes
+    pos := 0
+    while pos<message.size:
+      nextC0 := message.index_of 0xC0 --from=pos
+      nextDB := message.index_of 0xDB --from=pos
+
+      if nextC0 == -1 and nextDB == -1:
+        buf.write message[pos..]
+        break
+
+      if nextC0 != -1 and (nextC0 < nextDB or nextDB == -1):
+        buf.write message[pos..nextC0]
+        buf.write SLIP_C0_REPLACEMENT_
+        pos = nextC0+1
+      else:
+        buf.write message[pos..nextDB]
+        buf.write SLIP_DB_REPLACEMENT_
+        pos = nextDB+1
+
+    buf.put_byte SLIP_DELIMETER_
+    return buf.bytes
 
   /**
   Receives the next encapsulated message akipping all bytes received outside delimters. 
@@ -55,8 +80,9 @@ class Slip:
           return msg
         
         bytes := port_.read
-        //logger_.debug "SLIP: read some bytes: $bytes.size"
+        logger_.debug "SLIP: read some bytes: $bytes.size: $(hex.encode bytes)"
         add_to_parsed_ bytes
+    unreachable
 
   add_to_parsed_ bytes/ByteArray:
     assert: parsed_.size == 0
@@ -103,6 +129,7 @@ class Slip:
   Changes the baud rate of the port to $baud_rate.
   */
   change_baud_rate baud_rate/int:
+    logger_.info "Changing SLIP baudrate to $baud_rate"
     port_.set_baud_rate baud_rate
 
   /**
