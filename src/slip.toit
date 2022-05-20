@@ -82,7 +82,6 @@ class Slip:
         bytes := port_.read
         logger_.debug "SLIP: read some bytes: $bytes.size: $(hex.encode bytes)"
         add_to_parsed_ bytes
-    unreachable
 
   add_to_parsed_ bytes/ByteArray:
     assert: parsed_.size == 0
