@@ -14,8 +14,6 @@ SLIP_DELIMETER_BUF_  ::= #[SLIP_DELIMETER_]
 Implements the slip protocol
 */
 class Slip:
-  logger_/Logger ::= default.with_name "slip"
-
   port_/uart.Port
   writer_/Writer
   parsed_/List := []
@@ -27,8 +25,14 @@ class Slip:
   data. The port will operate at speed $baud_rate.
   */
   constructor --rx_pin/Pin  --tx_pin/Pin --baud_rate/int:
-    logger_.info "Created slip protocol, with baud_rate: $baud_rate"
     port_ = uart.Port --rx=rx_pin --tx=tx_pin --baud_rate=baud_rate
+    writer_ = Writer port_
+
+  /**
+  Constructs a slip protocol running on the given uart $port.
+  */
+  constructor --port/uart.Port:
+    port_ = port
     writer_ = Writer port_
 
   /**
@@ -37,8 +41,6 @@ class Slip:
   send message/ByteArray:
     encapsulated := encapsulate message
     writer_.write encapsulated
-
-    logger_.info "Send packet of size $message.size encapsulated size: $encapsulated.size"
 
   send_encapsulated encapsulated/ByteArray:
     writer_.write encapsulated
@@ -76,11 +78,9 @@ class Slip:
     while true:
         if parsed_.size != 0: 
           msg/ByteArray := parsed_.remove_last
-          //logger_.info "Received packet of $msg.size"
           return msg
         
         bytes := port_.read
-        logger_.debug "SLIP: read some bytes: $bytes.size: $(hex.encode bytes)"
         add_to_parsed_ bytes
 
   add_to_parsed_ bytes/ByteArray:
@@ -112,7 +112,6 @@ class Slip:
 
       if start + 1 == end:
         // Out of sequence detection. "Empty" SLIP messages indicate that we started reading in the middle of a message, so adjust
-        logger_.info "Out of sequence detected, auto correcting"
         idx--
         continue
 
@@ -128,7 +127,6 @@ class Slip:
   Changes the baud rate of the port to $baud_rate.
   */
   change_baud_rate baud_rate/int:
-    logger_.info "Changing SLIP baudrate to $baud_rate"
     port_.set_baud_rate baud_rate
 
   /**
