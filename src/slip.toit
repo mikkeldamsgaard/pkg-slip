@@ -90,7 +90,7 @@ class Slip:
       if want_escape_:
         if it == 0xDC: decoded.put_byte SLIP_DELIMETER_
         else if it == 0xDD: decoded.put_byte SLIP_ESCAPE_
-        else: throw "Byte encoding error, expected 0xC0 or 0xDB, but received: 0x$(%x it)"
+        else: throw "Byte encoding error, expected 0xDC or 0xDD, but received: 0x$(%x it)"
         want_escape_ = false
       else:
         if it == SLIP_ESCAPE_: want_escape_ = true
