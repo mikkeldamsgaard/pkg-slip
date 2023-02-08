@@ -1,1 +1,4 @@
 name: slip
+dependencies:
+  test:
+    path: ../pkg-test

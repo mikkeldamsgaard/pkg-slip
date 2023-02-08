@@ -1,1 +1,17 @@
-{}
+sdk: ^1.6.10
+prefixes:
+  test: pkg-test
+packages:
+  pkg-cli:
+    url: github.com/toitlang/pkg-cli
+    version: 1.2.0
+    hash: 0e2adab3ab434c597be60438ccf64008f703ad9c
+  pkg-host:
+    url: github.com/toitlang/pkg-host
+    version: 1.8.1
+    hash: 7f0cc4280065fb18ee09d3803f12180cec852d32
+  pkg-test:
+    path: ../pkg-test
+    prefixes:
+      cli: pkg-cli
+      host: pkg-host
