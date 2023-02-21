@@ -1,4 +1,5 @@
 name: slip
 dependencies:
   test:
-    path: ../pkg-test
+    url: github.com/mikkeldamsgaard/pkg-test
+    version: ^1.0.0
