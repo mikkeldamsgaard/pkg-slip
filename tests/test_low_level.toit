@@ -9,12 +9,12 @@ test_incomplete:
   buffer := bytes.Buffer
 
   slip_writer := SlipWriter (writer.Writer buffer)
-  slip_writer.send #[1]
-  slip_writer.send #[2]
+  slip_writer.send #[1,3,5]
+  slip_writer.send #[2,4,6]
 
   slip_reader := SlipReader (bytes.Reader buffer.bytes[1..])
 
-  test.expect_equals #[2] slip_reader.receive
+  test.expect_equals #[2,4,6] slip_reader.receive
   test.expect_null (print slip_reader.receive)
 
 test_incomplete_on_boundary:
@@ -119,13 +119,3 @@ test_broken_up_writes:
   received := slip_reader.receive
 
   test.expect_equals buf received
-
-main args:
-  test.add_test "test_incomplete":: test_incomplete
-  test.add_test "test_incomplete_on_boundary":: test_incomplete_on_boundary
-  test.add_test "test_only_delimeter":: test_only_delimeter
-  test.add_test "test_empty":: test_empty
-  test.add_test "test_out_of_band":: test_out_of_band
-  test.add_test "test_broken_up_reads":: test_broken_up_reads
-  test.add_test "test_broken_up_writes":: test_broken_up_writes
-  test.run args

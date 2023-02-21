@@ -48,11 +48,3 @@ test_big_random:
   8192.repeat: buf[it] = random 256
 
   do_transmit buf "Random big buffer"
-
-main args:
-  test.add_test "one_byte" :: test_one_byte
-  test.add_test "delimiter" :: test_delimiter
-  test.add_test "escape" :: test_escape
-  test.add_test "replacements" :: test_replacement
-  test.add_test "big_random" :: test_big_random
-  test.run args
