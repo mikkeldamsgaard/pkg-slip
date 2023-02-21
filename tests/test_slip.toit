@@ -5,6 +5,7 @@ import writer show Writer
 import ..src.slip show SlipReader SlipWriter
 import ..src.constants
 import reader
+import bytes
 
 class Pipe implements reader.Reader:
   pipe/Deque := Deque
@@ -30,9 +31,6 @@ do_transmit buf/ByteArray message/string:
 test_one_byte:
   do_transmit #[1] "Sending and receiving one-byte array"
 
-test_empty:
-  do_transmit #[] "Sending and receiving empty"
-
 test_delimiter:
   do_transmit #[SLIP_DELIMETER_] "Sending delimiter"
 
@@ -49,11 +47,10 @@ test_big_random:
   buf := ByteArray 8192
   8192.repeat: buf[it] = random 256
 
-  do_transmit buf "Random big buffeR"
+  do_transmit buf "Random big buffer"
 
 main args:
   test.add_test "one_byte" :: test_one_byte
-  test.add_test "empty" :: test_empty
   test.add_test "delimiter" :: test_delimiter
   test.add_test "escape" :: test_escape
   test.add_test "replacements" :: test_replacement

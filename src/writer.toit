@@ -3,6 +3,7 @@ import uart
 import bytes show Buffer
 import log
 import encoding.hex
+import encoding.url
 import writer show Writer
 import monitor
 
@@ -24,16 +25,7 @@ class SlipWriter:
         encapsulate_ message
 
   send_encapsulated_ encapsulated/ByteArray:
-    size := encapsulated.size
-    from := 0
-    while from < size:
-      written := writer_.write encapsulated[from..size]
-      print ">>>>  $(encapsulated[from..from+written].to_string_non_throwing)"
-      from += written
-      if from != size:
-        yield
-
-    //writer_.write encapsulated
+    writer_.write encapsulated
 
   encapsulate_ message/ByteArray -> ByteArray:
     buf := Buffer.with_initial_size message.size*1.2.to_int
