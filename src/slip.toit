@@ -9,8 +9,9 @@ import monitor
 import .constants
 import .reader
 import .writer
+import .reliable
 
-export SlipReader SlipWriter
+export SlipReader SlipWriter ReliableSlip
 
 /**
 Implements the slip protocol
@@ -28,6 +29,7 @@ class Slip:
     port_ = uart.Port --rx=rx_pin --tx=tx_pin --baud_rate=baud_rate
     writer_ = SlipWriter (Writer port_)
     reader_ = SlipReader port_
+
   /**
   Constructs a slip protocol running on the given uart $port.
   */
@@ -52,6 +54,12 @@ class Slip:
   */
   change_baud_rate baud_rate/int:
     port_.baud_rate = baud_rate
+
+  /**
+  Returns a new reliable slip protocol that implements reliable transport on top of slip
+  */
+  reliable -> ReliableSlip:
+    return ReliableSlip reader_ writer_ --linespeed_bytes_per_second=port_.baud_rate/10
 
   /**
   Closes this slip protocol
