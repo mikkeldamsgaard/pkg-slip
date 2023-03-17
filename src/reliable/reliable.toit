@@ -56,7 +56,6 @@ class ReliableSlip:
         msg := null
         e := catch --unwind=(: it == CANCELED_ERROR):
           msg = ReliableMessage_ slip_reader_.receive
-          print "Received: $msg.message_id $(msg.message_type == MESSAGE_TYPE_ACK?"ACK":"DATA")"
           if not msg.verify_checksum:
              print "[warn] crc error"
              continue
