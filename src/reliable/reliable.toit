@@ -44,7 +44,7 @@ class ReliableSlip:
               ack_msg/ReliableMessage_ := ack_channel_.receive
               if ack_msg.message_id == msg.message_id:
                 return
-        print "timeout: msg_id: $msg.message_id, size: $payload.size, ack_timeout_ms: $ack_timeout_ms"
+  //      print "timeout: msg_id: $msg.message_id, size: $payload.size, ack_timeout_ms: $ack_timeout_ms"
         if retry_count-- == 0: throw "Timeout waiting for ACK"
 
   send_ message/ReliableMessage_:
