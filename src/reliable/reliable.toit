@@ -2,6 +2,7 @@ import ..reader
 import ..writer
 import .message
 import monitor
+import log
 
 class ReliableSlip:
   slip_reader_/SlipReader
@@ -44,33 +45,39 @@ class ReliableSlip:
               ack_msg/ReliableMessage_ := ack_channel_.receive
               if ack_msg.message_id == msg.message_id:
                 return
-  //      print "timeout: msg_id: $msg.message_id, size: $payload.size, ack_timeout_ms: $ack_timeout_ms"
+        //print_ "[reliable slip] INFO timeout: msg_id: $msg.message_id, size: $payload.size, ack_timeout_ms: $ack_timeout_ms"
         if retry_count-- == 0: throw "Timeout waiting for ACK"
 
   send_ message/ReliableMessage_:
     slip_send_mutex_.do: slip_writer_.send message.raw_
 
   run_reader_:
-    catch --unwind=(: it != CANCELED_ERROR):
+    catch:
       while true:
         msg := null
-        e := catch --unwind=(: it == CANCELED_ERROR):
+        e := catch:
           msg = ReliableMessage_ slip_reader_.receive
           if not msg.verify_checksum:
-             print "[warn] crc error"
+             //print_ "[reliable slip] WARN crc error"
              continue
         if e:
-          print "[warn] slip error: $e"
+          //print_ "[reliable slip] WARN slip error: $e"
           continue
 
         if msg.message_type == MESSAGE_TYPE_ACK:
           ack_channel_.try_send msg
         else:
           send_ (ReliableMessage_ msg.message_id MESSAGE_TYPE_ACK)
-          //print "Acked $msg.message_id"
           if not received_message_id_ or
              received_message_id_ < msg.message_id or
              msg.message_id < received_message_id_ - 128: // For wrap around message ids.
-            incomming_.send msg.payload
-            received_message_id_ = msg.message_id
-            if received_message_id_ == 0xFF: received_message_id_ = null
+            if incomming_.try_send msg.payload:
+              //print_ "[reliable slip] INFO Acked $msg.message_id"
+              send_ (ReliableMessage_ msg.message_id MESSAGE_TYPE_ACK)
+              received_message_id_ = msg.message_id
+              if received_message_id_ == 0xFF: received_message_id_ = null
+            else:
+              //print_ "Failed to deliver to message queue (full)"
+          else:
+            //print_ "[reliable slip] INFO Acked $msg.message_id"
+            send_ (ReliableMessage_ msg.message_id MESSAGE_TYPE_ACK)
