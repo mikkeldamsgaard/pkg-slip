@@ -1,4 +1,4 @@
-sdk: ^1.6.10
+sdk: ^2.0.0-alpha.64
 prefixes:
   test: pkg-test
 packages:
@@ -8,16 +8,16 @@ packages:
     hash: 0e2adab3ab434c597be60438ccf64008f703ad9c
   pkg-host:
     url: github.com/toitlang/pkg-host
-    version: 1.8.1
-    hash: 7f0cc4280065fb18ee09d3803f12180cec852d32
+    version: 1.9.0
+    hash: 76e4dc5328a5c3739e97f65ed196d05058071359
   pkg-tar:
     url: github.com/toitlang/pkg-tar
     version: 1.0.0
     hash: 72f9f1318b03300657dee12c8cfac72413ca1b56
   pkg-test:
     url: github.com/mikkeldamsgaard/pkg-test
-    version: 1.0.0
-    hash: 765864a1eb7f1e6abb2d98b798cf1713d1232042
+    version: 1.0.1
+    hash: 2120683554f0e4f11d571835904f8e578db8ae58
     prefixes:
       cli: pkg-cli
       host: pkg-host
